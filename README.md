@@ -71,5 +71,8 @@ and [docs/portability.md](docs/portability.md) before setting up another Jetson.
 [docs/future-vehicle-integration.md](docs/future-vehicle-integration.md) describes
 the proposed camera-guided teleoperation over campus Wi-Fi and its safety
 boundary.
+[docs/research-directions.md](docs/research-directions.md) turns the platform's
+networking, perception, embedded-compute, human-factor, and safety constraints
+into concrete research questions and experiments.
 [docs/legacy-baseline.md](docs/legacy-baseline.md) records the evidence that led
 to this clean-room implementation.
