@@ -18,6 +18,33 @@ If the machine is showing the GDM login screen, `up` asks for sudo once so it
 can read that session's X11 cookie. It does not alter the host X11
 configuration.
 
+## Stop and start the whole stack
+
+Run these commands on the Jetson from the project directory.
+
+Stop camera, VSLAM, nvblox, and RViz:
+
+```bash
+cd /home/jetson/roscar
+./roscar down
+```
+
+Start everything again and wait for the health check:
+
+```bash
+cd /home/jetson/roscar
+./roscar up
+```
+
+Confirm all data paths are ready:
+
+```bash
+./roscar status
+```
+
+`down` removes only the `roscar` container. It retains the built image and the
+`roscar-data` volume containing runtime logs, maps, and bags.
+
 ## Operator commands
 
 ```bash
