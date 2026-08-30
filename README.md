@@ -68,5 +68,8 @@ ephemeral authentication cookie. No host directory is mounted.
 See [docs/how-it-works.md](docs/how-it-works.md) for a beginner-friendly runtime
 walkthrough, [docs/architecture.md](docs/architecture.md) for design details,
 and [docs/portability.md](docs/portability.md) before setting up another Jetson.
+[docs/future-vehicle-integration.md](docs/future-vehicle-integration.md) describes
+the proposed camera-guided teleoperation over campus Wi-Fi and its safety
+boundary.
 [docs/legacy-baseline.md](docs/legacy-baseline.md) records the evidence that led
 to this clean-room implementation.
