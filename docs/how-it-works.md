@@ -294,6 +294,12 @@ RViz is a viewer, not part of the estimation algorithm. Its fixed frame is
 - the nvblox triangle mesh;
 - a reference grid.
 
+![RViz showing live infrared and color ceiling views, the green VSLAM trajectory, and the current nvblox mesh.](images/rviz-perception-stack.png)
+
+*Current implementation captured on the Jetson on 2026-08-30. The camera was
+pointed at the ceiling, so this is a live pipeline-validation view rather than a
+survey-quality map. RViz visualizes results; it does not control the vehicle.*
+
 RViz runs on the Jetson and draws through its Xorg display. The container gets
 one read-only X11 socket file and a temporary authentication cookie. An RViz or
 X11 failure does not necessarily mean the ROS data pipeline has failed.

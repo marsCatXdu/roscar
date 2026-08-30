@@ -30,6 +30,12 @@ remote-driving implementation.
 | PCA9685 board | Produces pulse-width modulation (PWM) control signals; it is not a motor driver or safety watchdog |
 | Current `roscar` stack | Produces odometry-only visual SLAM (VSLAM), bounded nvblox reconstruction, health status, and local RViz visualization |
 
+![Vehicle chassis with steering servo, brushed-motor drive hardware, RC receiver, and a loose PCA9685 board.](images/vehicle-hardware-overview.jpg)
+
+*Candidate vehicle hardware before integration. The loose PCA9685 board is
+shown for reference; this photograph does not establish that it is wired or
+configured.*
+
 The exact servo, ESC, motor, receiver, battery, and regulator models were not
 legible in the available photographs. Their electrical behavior must be
 identified rather than inferred from appearance.
@@ -338,6 +344,11 @@ multiplexer with defined priority; its outputs must not be electrically joined
 to PCA9685 outputs.
 
 ### Electrical constraints from the photographed hardware
+
+| PCA9685 front | PCA9685 back |
+| --- | --- |
+| ![Front of the PCA9685 breakout showing its control pins, address pads, PWM headers, and separate power terminal.](images/pca9685-front.jpg) | ![Back of the PCA9685 breakout showing its printed voltage and frequency notes.](images/pca9685-back.jpg) |
+| I2C and enable pins, address pads, 16 PWM headers, and the separate `V+` terminal are visible. | These are the photographed breakout's own supply and frequency markings; verify the board and every connected device before applying power. |
 
 - The Jetson 40-pin header uses 3.3 V logic. PCA9685 `VCC` should therefore use
   3.3 V, with SDA, SCL, and a common signal ground.
