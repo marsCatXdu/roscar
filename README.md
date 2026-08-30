@@ -39,5 +39,6 @@ Docker's device boundary. RViz receives one read-only X11 socket file and an
 ephemeral authentication cookie. No host directory is mounted.
 
 See [docs/architecture.md](docs/architecture.md) for design details and
-[docs/legacy-baseline.md](docs/legacy-baseline.md) for the evidence that led to
-this clean-room implementation.
+[docs/portability.md](docs/portability.md) before setting up another Jetson.
+[docs/legacy-baseline.md](docs/legacy-baseline.md) records the evidence that led
+to this clean-room implementation.
