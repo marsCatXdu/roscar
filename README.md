@@ -71,6 +71,9 @@ and [docs/portability.md](docs/portability.md) before setting up another Jetson.
 [docs/future-vehicle-integration.md](docs/future-vehicle-integration.md) describes
 the proposed camera-guided teleoperation over campus Wi-Fi and its safety
 boundary.
+[docs/lab-vehicle-roadmap.md](docs/lab-vehicle-roadmap.md) proposes a gated path
+toward a synchronized full-size sensor mule and a shadow/HIL-tested vehicle
+interface.
 [docs/research-directions.md](docs/research-directions.md) turns the platform's
 networking, perception, embedded-compute, human-factor, and safety constraints
 into concrete research questions and experiments.

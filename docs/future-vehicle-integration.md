@@ -517,6 +517,11 @@ input, but is not by itself a complete autonomous navigation system. No
 autonomous motion should be added until remote operation and all local stop
 paths are repeatable and measured.
 
+This hobby-vehicle plan is not a drive-by-wire design for a road vehicle. The
+[full-size laboratory-vehicle roadmap](lab-vehicle-roadmap.md) describes the
+separate sensor-mule, replay, shadow-mode, HIL, and closed-course gates needed
+to work with the target laboratory's real car and industry equipment.
+
 ## Decisions to make before implementation
 
 - Exact servo, ESC, receiver, motor, battery, and BEC specifications
@@ -535,6 +540,7 @@ do not infer electrical or stopping behavior from generic component appearance.
 
 - [Current architecture](architecture.md)
 - [How the current perception stack works](how-it-works.md)
+- [Progression to a full-size laboratory vehicle](lab-vehicle-roadmap.md)
 - [ROS REP 105: coordinate frames for mobile platforms](https://www.ros.org/reps/rep-0105.html)
 - [RFC 8831: WebRTC data channels](https://www.rfc-editor.org/rfc/rfc8831.html)
 - [RFC 8827: WebRTC security architecture](https://www.rfc-editor.org/rfc/rfc8827.html)
