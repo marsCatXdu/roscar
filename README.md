@@ -38,7 +38,8 @@ The container receives GPU and camera access through the NVIDIA runtime and
 Docker's device boundary. RViz receives one read-only X11 socket file and an
 ephemeral authentication cookie. No host directory is mounted.
 
-See [docs/architecture.md](docs/architecture.md) for design details and
-[docs/portability.md](docs/portability.md) before setting up another Jetson.
+See [docs/how-it-works.md](docs/how-it-works.md) for a beginner-friendly runtime
+walkthrough, [docs/architecture.md](docs/architecture.md) for design details,
+and [docs/portability.md](docs/portability.md) before setting up another Jetson.
 [docs/legacy-baseline.md](docs/legacy-baseline.md) records the evidence that led
 to this clean-room implementation.
