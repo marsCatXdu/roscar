@@ -32,6 +32,136 @@ An important naming detail: cuVSLAM is configured with
 **odometry-only mode**. It tracks motion, but does not perform loop closure or
 create a reusable localization map. Nvblox creates the dense 3D reconstruction.
 
+## Hardware-to-software overview
+
+The system has four layers: physical hardware, the Jetson host OS, one Docker
+container, and the ROS processing graph inside that container. Docker packages
+the software, but it does not emulate the camera or GPU and it does not bring
+its own Linux kernel.
+
+```mermaid
+flowchart TB
+    subgraph P[Physical hardware]
+        CAM[D435i camera]
+        CPU[Jetson CPU]
+        GPU[Jetson GPU]
+        RAM[Jetson RAM]
+        NVME[NVMe storage]
+        SCREEN[Display]
+    end
+
+    subgraph H[Host Ubuntu and L4T]
+        KERNEL[Linux kernel, USB and NVIDIA drivers]
+        DOCKER[Docker daemon and NVIDIA runtime]
+        XORG[Xorg desktop]
+        VOLUME[Docker named volume]
+    end
+
+    subgraph C[roscar Docker container]
+        RS[RealSense node]
+        VO[cuVSLAM node]
+        NB[nvblox node]
+        RVIZ[RViz]
+        MON[monitor and health check]
+    end
+
+    CAM -->|USB 3 packets| KERNEL
+    KERNEL -->|USB device access| RS
+    DOCKER -->|starts and supervises| C
+    VO -->|CUDA through NVIDIA runtime| GPU
+    NB -->|CUDA through NVIDIA runtime| GPU
+    RVIZ -->|OpenGL through NVIDIA runtime| GPU
+    RVIZ -->|read-only X11 socket| XORG
+    XORG --> SCREEN
+    MON -->|status and logs| VOLUME
+    VOLUME --> NVME
+    C -->|process execution| CPU
+    C -->|images, queues and voxel map| RAM
+```
+
+### Physical hardware
+
+The D435i contains stereo infrared sensors, a color sensor, a depth engine, an
+infrared emitter, and an IMU. It sends image and calibration data over USB 3.
+This project uses infrared, depth, and color, but disables the emitter and IMU.
+
+The Jetson's onboard resources have different jobs:
+
+| Resource | Work performed here |
+| --- | --- |
+| CPU | Linux, Docker, ROS message delivery, camera driver, launch and monitoring |
+| GPU | cuVSLAM motion estimation, nvblox reconstruction, and RViz rendering |
+| RAM | Live images, message queues, transforms, and the in-memory voxel map |
+| NVMe | Host OS, Docker images and cache, plus the `roscar-data` volume |
+| USB controller | Transfers D435i data to the host kernel |
+| Display output | Shows the Xorg desktop and RViz window |
+
+RAM is volatile: its live map and queues disappear when their processes stop.
+NVMe is persistent: Docker images, build cache, and named-volume files survive
+a normal restart.
+
+### Host OS
+
+Ubuntu/L4T owns the hardware. Its Linux kernel handles USB, scheduling, memory,
+filesystems, and the NVIDIA GPU driver. Xorg owns the physical display. The
+Docker daemon creates and supervises the container.
+
+This boundary is why the host version matters. The container includes CUDA and
+ROS user-space libraries, but GPU calls still pass through the host's NVIDIA
+driver, and camera traffic still passes through the host kernel. A container
+cannot repair an incompatible L4T driver or a missing USB device.
+
+The NVIDIA container runtime exposes the Jetson GPU to container processes.
+Privileged mode currently gives the container broad access to the USB camera.
+Host networking lets ROS 2 use its normal discovery and communication paths,
+and host IPC is available to components that need local shared-memory exchange.
+
+### Docker container
+
+The `roscar` container supplies a repeatable user space: ROS 2 Humble, pinned
+RealSense libraries, cuVSLAM, nvblox, the project launch files, and RViz. All of
+its processes still execute directly on the Jetson CPU and GPU and consume the
+Jetson's real RAM.
+
+The container receives only two storage/display mounts:
+
+- `roscar-data`, a Docker-managed volume mounted at `/var/roscar`;
+- one read-only X11 socket file used by RViz.
+
+The project application code and configuration are baked into the image; the
+source repository is not mounted at runtime. The container has an ephemeral
+writable layer, while the named volume is kept when `./roscar down` removes the
+container.
+
+### ROS stack inside the container
+
+ROS 2 connects the camera, cuVSLAM, nvblox, RViz, and monitor through typed
+topics and TF transforms. One camera frame follows this path:
+
+1. The D435i captures sensor data and sends it over USB.
+2. The host kernel receives it and makes the USB device available to the
+   privileged container.
+3. The RealSense node converts it into ROS image and calibration messages.
+4. cuVSLAM consumes the stereo infrared pair and uses the GPU to estimate the
+   camera pose.
+5. Nvblox combines depth, color, calibration, and that pose on the GPU to
+   update its voxel map and mesh.
+6. RViz receives images, poses, TF, and mesh data, then renders through Xorg.
+7. The monitor records fresh-message timestamps in the named volume, and the
+   Docker health check uses them to judge readiness.
+
+The large image data normally remains in RAM while the system runs. It is not
+automatically written to NVMe unless recording or map-saving behavior is added.
+
+### What happens across a reboot
+
+The host OS and Docker daemon restart first. The newly booted host kernel still
+owns the devices, so a restarted container must reacquire access to them.
+Docker's restart policy can relaunch `roscar`, but a new desktop login may have
+a different X11 authentication cookie. Running `./roscar up` after a reboot
+safely refreshes that cookie, recreates the container if necessary, and waits
+for the complete data path to become healthy.
+
 ## Minimal ROS 2 vocabulary
 
 | Term | Meaning in ordinary software terms | Example here |
