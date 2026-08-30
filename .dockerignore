@@ -1,0 +1,6 @@
+.git
+.gitignore
+.roscar.env
+docs/
+**/__pycache__
+**/*.pyc

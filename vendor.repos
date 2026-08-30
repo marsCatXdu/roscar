@@ -1,0 +1,29 @@
+repositories:
+  realsense-ros:
+    type: git
+    url: https://github.com/realsenseai/realsense-ros.git
+    version: 5c2244ca5cd9867c9ee63769668891430f460dfd
+  isaac_ros_common:
+    type: git
+    url: https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common.git
+    version: fcf4d9e17f8f0a7f47f1d22d6a18421ce3768c01
+  isaac_ros_compression:
+    type: git
+    url: https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_compression.git
+    version: 097ff88a437147ff89993ba26ffda4cb819cb763
+  isaac_ros_image_pipeline:
+    type: git
+    url: https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_image_pipeline.git
+    version: d931cce3d0bb4532a0a047f17a15705fc6ac2e1b
+  isaac_ros_nitros:
+    type: git
+    url: https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_nitros.git
+    version: e3a29804b6de38fefbf7040864124d983bfceb6a
+  isaac_ros_visual_slam:
+    type: git
+    url: https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_visual_slam.git
+    version: e31f4cc1d41a329a01946e5fe63669f8b15da677
+  isaac_ros_nvblox:
+    type: git
+    url: https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_nvblox.git
+    version: 7908a183acf84f4f1ab3fda7b6d6caf3eefc1f78

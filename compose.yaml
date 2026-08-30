@@ -1,0 +1,38 @@
+name: roscar
+
+services:
+  roscar:
+    image: roscar:0.1.0
+    build:
+      context: .
+      args:
+        BASE_IMAGE: isaac_ros_dev-aarch64:latest
+        BUILD_JOBS: ${ROSCAR_BUILD_JOBS:-1}
+        ROSCAR_REVISION: ${ROSCAR_REVISION:-development}
+    container_name: roscar
+    runtime: nvidia
+    network_mode: host
+    ipc: host
+    privileged: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    environment:
+      DISPLAY: ${ROSCAR_DISPLAY}
+      ROSCAR_XAUTH_B64: ${ROSCAR_XAUTH_B64}
+      ROSCAR_USE_RVIZ: ${ROSCAR_USE_RVIZ:-true}
+      RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+      FASTDDS_BUILTIN_TRANSPORTS: UDPv4
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: all
+    volumes:
+      - type: volume
+        source: roscar-data
+        target: /var/roscar
+      - type: bind
+        source: ${ROSCAR_X11_SOCKET}
+        target: ${ROSCAR_X11_SOCKET}
+        read_only: true
+
+volumes:
+  roscar-data:
+    name: roscar-data

@@ -1,0 +1,21 @@
+/**:
+  ros__parameters:
+    camera_name: camera
+    serial_no: ""
+    initial_reset: false
+    enable_infra1: true
+    enable_infra2: true
+    enable_depth: true
+    enable_color: true
+    enable_gyro: false
+    enable_accel: false
+    unite_imu_method: 0
+    depth_module.emitter_enabled: 0
+    depth_module.profile: 848x480x30
+    rgb_camera.profile: 640x480x30
+    infra1_qos: SENSOR_DATA
+    infra2_qos: SENSOR_DATA
+    depth_qos: SENSOR_DATA
+    color_qos: SENSOR_DATA
+    pointcloud.enable: false
+    align_depth.enable: false

@@ -1,0 +1,37 @@
+/**:
+  ros__parameters:
+    cuda_stream_type: 1
+    voxel_size: 0.10
+    num_cameras: 1
+    use_tf_transforms: true
+    global_frame: odom
+    pose_frame: camera_link
+    mapping_type: static_tsdf
+    input_qos: SENSOR_DATA
+    use_depth: true
+    use_color: true
+    use_lidar: false
+    integrate_depth_rate_hz: 30.0
+    integrate_color_rate_hz: 5.0
+    update_mesh_rate_hz: 5.0
+    update_esdf_rate_hz: 5.0
+    publish_layer_rate_hz: 2.0
+    publish_debug_vis_rate_hz: 1.0
+    map_clearing_radius_m: -1.0
+    map_clearing_frame_id: camera_link
+    esdf_slice_bounds_visualization_attachment_frame_id: camera_link
+    workspace_height_bounds_visualization_attachment_frame_id: camera_link
+    static_mapper.workspace_bounds_type: bounding_box
+    static_mapper.workspace_bounds_min_corner_x_m: -5.0
+    static_mapper.workspace_bounds_max_corner_x_m: 5.0
+    static_mapper.workspace_bounds_min_corner_y_m: -5.0
+    static_mapper.workspace_bounds_max_corner_y_m: 5.0
+    static_mapper.workspace_bounds_min_height_m: -0.5
+    static_mapper.workspace_bounds_max_height_m: 2.5
+    static_mapper.projective_integrator_max_integration_distance_m: 4.0
+    static_mapper.tsdf_decay_factor: 0.999999
+    static_mapper.decay_integrator_deallocate_decayed_blocks: false
+    print_rates_to_console: false
+    print_timings_to_console: false
+    print_delays_to_console: false
+    print_queue_drops_to_console: true

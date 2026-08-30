@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+export COMPOSE_PROGRESS=plain
+
+readonly EXPECTED_BASE_IMAGE_ID="sha256:9d5af4d72ed54331d31a1c173d4e71e2679a56765ab447c76a9aeb297965d4e3"
+readonly ENV_FILE=".roscar.env"
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+usage() {
+  cat <<'EOF'
+Usage: ./roscar COMMAND
+
+Commands:
+  up       Build if needed, then bring up camera, VSLAM, nvblox, and RViz
+  down     Stop and remove only the roscar container; retain its data volume
+  status   Show container and in-stack readiness status
+  logs     Follow the unified stack log
+  doctor   Show recent logs and the machine-readable readiness report
+  shell    Open a shell in the isolated container
+  build    Build the pinned image without starting it
+EOF
+}
+
+require_base_image() {
+  local actual
+  actual="$(docker image inspect isaac_ros_dev-aarch64:latest --format '{{.Id}}' 2>/dev/null || true)"
+  if [[ "${actual}" != "${EXPECTED_BASE_IMAGE_ID}" ]]; then
+    printf 'Expected base image %s, found %s\n' "${EXPECTED_BASE_IMAGE_ID}" "${actual:-nothing}" >&2
+    printf 'Refusing to build from an unverified base image.\n' >&2
+    exit 1
+  fi
+}
+
+prepare_runtime_env() {
+  local display_number socket xauthority auth_line revision
+
+  socket="$(find /tmp/.X11-unix -maxdepth 1 -type s -name 'X*' -print | sort -V | tail -1)"
+  if [[ -z "${socket}" ]]; then
+    printf 'No active X11 socket found; RViz cannot start.\n' >&2
+    exit 1
+  fi
+  display_number="${socket##*X}"
+  xauthority="/run/user/$(id -u)/gdm/Xauthority"
+  if [[ -r "${xauthority}" ]]; then
+    auth_line="$(xauth -f "${xauthority}" nlist ":${display_number}" | sed 's/^..../ffff/' | base64 -w0)"
+  else
+    xauthority="$(ps -eo args= | awk '/[X]org/ { for (i=1; i<=NF; i++) if ($i == "-auth") { print $(i + 1); exit } }')"
+    if [[ -z "${xauthority}" ]]; then
+      printf 'Cannot locate X11 authority for display :%s.\n' "${display_number}" >&2
+      exit 1
+    fi
+    printf 'The desktop login screen owns X11; sudo is required to copy its cookie.\n' >&2
+    auth_line="$(sudo xauth -f "${xauthority}" nlist ":${display_number}" | sed 's/^..../ffff/' | base64 -w0)"
+  fi
+  if [[ -z "${auth_line}" ]]; then
+    printf 'Could not extract X11 authentication for display :%s.\n' "${display_number}" >&2
+    exit 1
+  fi
+
+  revision="$(git rev-parse --verify HEAD 2>/dev/null || printf 'development')"
+  umask 077
+  cat >"${ENV_FILE}" <<EOF
+ROSCAR_DISPLAY=:${display_number}
+ROSCAR_X11_SOCKET=${socket}
+ROSCAR_XAUTH_B64=${auth_line}
+ROSCAR_REVISION=${revision}
+ROSCAR_BUILD_JOBS=${ROSCAR_BUILD_JOBS:-1}
+ROSCAR_USE_RVIZ=${ROSCAR_USE_RVIZ:-true}
+EOF
+}
+
+prepare_build_env() {
+  local revision
+  revision="$(git rev-parse --verify HEAD 2>/dev/null || printf 'development')"
+  umask 077
+  cat >"${ENV_FILE}" <<EOF
+ROSCAR_DISPLAY=:0
+ROSCAR_X11_SOCKET=/tmp/.X11-unix/X0
+ROSCAR_XAUTH_B64=
+ROSCAR_REVISION=${revision}
+ROSCAR_BUILD_JOBS=${ROSCAR_BUILD_JOBS:-1}
+ROSCAR_USE_RVIZ=${ROSCAR_USE_RVIZ:-true}
+EOF
+}
+
+compose() {
+  docker compose --env-file "${ENV_FILE}" "$@"
+}
+
+wait_for_stack() {
+  local state health attempts=0
+  while (( attempts < 36 )); do
+    state="$(docker inspect roscar --format '{{.State.Status}}' 2>/dev/null || true)"
+    health="$(docker inspect roscar --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' 2>/dev/null || true)"
+    printf 'roscar: state=%s health=%s\n' "${state:-missing}" "${health:-unknown}"
+    if [[ "${state}" == "running" && "${health}" == "healthy" ]]; then
+      docker exec roscar cat /var/roscar/status.json
+      return 0
+    fi
+    if [[ "${state}" == "exited" || "${state}" == "dead" ]]; then
+      docker logs --tail 160 roscar >&2 || true
+      return 1
+    fi
+    sleep 5
+    attempts=$((attempts + 1))
+  done
+  docker logs --tail 200 roscar >&2 || true
+  printf 'Stack did not become healthy within three minutes.\n' >&2
+  return 1
+}
+
+command="${1:-}"
+case "${command}" in
+  up)
+    require_base_image
+    prepare_runtime_env
+    compose up -d --build
+    wait_for_stack
+    ;;
+  build)
+    require_base_image
+    prepare_build_env
+    compose build
+    ;;
+  down)
+    prepare_runtime_env
+    compose down
+    ;;
+  status)
+    docker ps -a --filter name='^/roscar$'
+    docker inspect roscar --format '{{json .State.Health}}' 2>/dev/null || true
+    docker exec roscar cat /var/roscar/status.json 2>/dev/null || true
+    ;;
+  logs)
+    docker logs --follow --tail 200 roscar
+    ;;
+  doctor)
+    docker exec roscar cat /var/roscar/status.json 2>/dev/null || true
+    docker logs --tail 240 roscar
+    ;;
+  shell)
+    docker exec -it roscar bash
+    ;;
+  *)
+    usage
+    [[ -n "${command}" ]] || exit 0
+    exit 2
+    ;;
+esac
